@@ -12,6 +12,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true })); // for form data
 
 app.use("/api/user/", UserRoutes);
+
 // error handler
 app.use((err, req, res, next) => {
   const status = err.status || 500;
@@ -40,13 +41,13 @@ const connectDB = () => {
     });
 };
 
-const startServer = async () => {
-  try {
-    connectDB();
-    app.listen(8080, () => console.log("Server started on port 8080"));
-  } catch (error) {
-    console.log(error);
-  }
-};
+// Database connect karein
+connectDB();
 
-startServer();
+// Sirf local development ke liye listen karein
+if (process.env.NODE_ENV !== "production") {
+  app.listen(8080, () => console.log("Server started on port 8080"));
+}
+
+// Vercel Serverless Function ke liye App Export
+export default app;
