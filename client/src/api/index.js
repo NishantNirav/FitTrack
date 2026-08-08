@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://fitness-tracker-server-rust.vercel.app/",
+  baseURL: "https://fitness-tracker-server-rust.vercel.app/api/",
   // baseURL: "http://localhost:8080/api/",
 });
 
