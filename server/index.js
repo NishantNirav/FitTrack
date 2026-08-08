@@ -11,7 +11,47 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true })); // for form data
 
+// Serverless DB Connection Logic
+let isConnected = false;
+
+const connectDB = async () => {
+  mongoose.set("strictQuery", true);
+  
+  if (isConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  try {
+    const db = await mongoose.connect(process.env.MONGODB_URL);
+    isConnected = db.connections[0].readyState === 1;
+    console.log("Connected to MongoDB");
+  } catch (err) {
+    console.error("Failed to connect with MongoDB:", err);
+    throw err;
+  }
+};
+
+// Middleware: Database connect hone ka wait karein har request se pehle
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Database connection error",
+      error: err.message,
+    });
+  }
+});
+
 app.use("/api/user/", UserRoutes);
+
+app.get("/", async (req, res) => {
+  res.status(200).json({
+    message: "Hello developers from GFG",
+  });
+});
 
 // error handler
 app.use((err, req, res, next) => {
@@ -23,26 +63,6 @@ app.use((err, req, res, next) => {
     message,
   });
 });
-
-app.get("/", async (req, res) => {
-  res.status(200).json({
-    message: "Hello developers from GFG",
-  });
-});
-
-const connectDB = () => {
-  mongoose.set("strictQuery", true);
-  mongoose
-    .connect(process.env.MONGODB_URL)
-    .then(() => console.log("Connected to Mongo DB"))
-    .catch((err) => {
-      console.error("failed to connect with mongo");
-      console.error(err);
-    });
-};
-
-// Database connect karein
-connectDB();
 
 // Sirf local development ke liye listen karein
 if (process.env.NODE_ENV !== "production") {
